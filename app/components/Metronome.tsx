@@ -54,30 +54,37 @@ const MetronomeComponent = () => {
         }, 100);
     };
 
+    const inputFields = [
+        { label: 'Time Signature', value: timeSig, setter: setTimeSig },
+        { label: 'Tempo (BPM)', value: tempo, setter: setTempo },
+        { label: 'Bars between ticks', value: barsBetweenTicks, setter: setBarsBetweenTicks },
+        { label: 'Count-in bars', value: countInBars, setter: setCountInBars },
+    ];
+
+    const handleChange = (setter: (value: number) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
+        setter(Number(e.target.value));
+    };
+
     return (
         <div className="flex flex-col items-center">
             <div className={`w-36 h-36 rounded-full mt-4 ${isLightOn ? 'bg-blue-300' : 'bg-gray-800'}`}></div>
             <div className={'flex items-center justify-center gap-6 my-12'}>
-                <button onClick={handleStart} className="bg-blue-500 text-white px-4 py-2 rounded-md mr-2">Start</button>
-                <button onClick={handleStop} className="bg-red-500 text-white px-4 py-2 rounded-md">Stop</button>
+                <button onClick={handleStart} className="bg-gray-500 text-white px-4 py-2 rounded-md mr-2">Start</button>
+                <button onClick={handleStop} className="bg-gray-800 text-white px-4 py-2 rounded-md">Stop</button>
             </div>
-            <div className={'flex items-start justify-center w-full flex-col'}>
-                <div className="mt-4 w-full">
-                    <label htmlFor="beatsPerMeasure" className="mr-2 text-white">Time Signature:</label>
-                    <input type="number" className={'text-black'} value={timeSig} onChange={(e) => setTimeSig(Number(e.target.value))} />
-                </div>
-                <div>
-                    <label htmlFor="tempo" className="mr-2 text-white">Tempo (BPM):</label>
-                    <input type="number" className={'text-black'} value={tempo} onChange={(e) => setTempo(Number(e.target.value))} />
-                </div>
-                <div>
-                    <label htmlFor="barsBetweenTicks" className="mr-2 text-white">Bars between ticks:</label>
-                    <input type="number" className={'text-black'} value={barsBetweenTicks} onChange={(e) => setBarsBetweenTicks(Number(e.target.value))} />
-                </div>
-                <div>
-                    <label htmlFor="countInBars" className="mr-2 text-white">Count-in bars:</label>
-                    <input type="number" className={'text-black'} value={countInBars} onChange={(e) => setCountInBars(Number(e.target.value))}  />
-                </div>
+            <div className={'flex flex-wrap items-start justify-center w-full'}>
+                {inputFields.map(({ label, value, setter }, index) => (
+                    <div key={index} className="mt-4 w-full flex flex-col items-center justify-center">
+                        <label htmlFor={`input-${index}`} className="mr-2 text-gray-400">{label}</label>
+                        <input
+                            id={`input-${index}`}
+                            type="number"
+                            className={'text-gray-200 px-6 py-3 rounded bg-gray-800 text-center'}
+                            value={value}
+                            onChange={handleChange(setter)}
+                        />
+                    </div>
+                ))}
             </div>
         </div>
     );
