@@ -83,26 +83,26 @@ const MetronomeComponent = () => {
     return (
         <div className="flex flex-col items-center justify-center h-screen">
             <span className={`w-[5rem] h-[0.7rem] rounded-full ${isLightOn ? 'bg-off-white' : 'bg-tick-off'}`} />
-            <div className={'flex items-center justify-center gap-6 my-12'}>
+            <div className={'flex items-center justify-center gap-6 my-6'}>
                 <div onClick={handleToggle} className={`brighten-on-click bg-transparent flex items-center justify-center border-2 border-button-start text-off-white px-3 py-4 rounded-full mr-2 ${canStart() ? '' : 'opacity-50 pointer-events-none'}`}>{isRunning ? "Stop" : "Start"}</div>
             </div>
-            <div className={'flex flex-wrap items-start justify-center w-full gap-2'}>
+            <div className={'flex flex-wrap items-start justify-evenly h-full w-full gap-2'}>
                 {inputFields.map((field, index) => (
-                    <div key={index} className="mt-3 w-full flex flex-col items-center justify-center">
-                        <label htmlFor={`input-${index}`} className="mb-1 text-off-white">{field.label}</label>
-                        <div className="relative">
-                            <input
-                                id={`input-${index}`}
-                                type="number"
-                                className={'input-no-outline text-primary-text px-3 py-2 border-2 border-tick-off rounded bg-transparent text-center '}
-                                value={field.value}
-                                onChange={(e) => handleChange(index, e.target.value)}
-                                style={{ caretColor: 'transparent' }}
-                            />
-                            {field.label === 'Time Signature' && (
-                                <span className="text-mid-gray absolute inset-y-0 right-0 flex items-center pr-3">/4</span>
-                            )}
-                        </div>
+                    <div key={index} className="mt-3 w-full h-full flex flex-col items-center justify-center">
+                            <label htmlFor={`input-${index}`} className="mb-1 text-off-white">{field.label}</label>
+                            <div className="relative">
+                                <input
+                                    id={`input-${index}`}
+                                    type="number"
+                                    className={'input-no-outline text-primary-text px-3 py-1 border-2 border-tick-off rounded bg-transparent text-center '}
+                                    value={field.value}
+                                    onChange={(e) => handleChange(index, e.target.value)}
+                                    style={{ caretColor: 'transparent' }}
+                                />
+                                {field.label === 'Time Signature' && (
+                                    <span className="text-mid-gray absolute inset-y-0 right-0 flex items-center pr-3">/4</span>
+                                )}
+                            </div>
                     </div>
                 ))}
             </div>
