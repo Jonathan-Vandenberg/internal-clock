@@ -24,10 +24,35 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb));
+  overflow: hidden;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+@keyframes brighten-border {
+  0% {
+    border-color: #2813a8; /* Initial border color */
+  }
+  50% {
+    border-color: #170c59; /* Brighter border color */
+  }
+  100% {
+    border-color: #2813a8; /* Return to initial border color */
+  }
+}
+
+.brighten-on-click:active {
+  animation: brighten-border 300ms ease-out;
+}
+
+.input-focus {
+  border-color: red;
+}
+
+.input-no-outline:focus {
+  outline: none;
 }
