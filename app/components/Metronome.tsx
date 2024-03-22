@@ -84,7 +84,7 @@ const MetronomeComponent = () => {
         <div className="flex flex-col items-center justify-center h-screen">
             <span className={`w-[5rem] h-[0.7rem] rounded-full ${isLightOn ? 'bg-off-white' : 'bg-tick-off'}`} />
             <div className={'flex items-center justify-center gap-6 my-6'}>
-                <div onClick={handleToggle} className={`brighten-on-click bg-transparent flex items-center justify-center border-2 border-button-start text-off-white px-3 py-4 rounded-full mr-2 ${canStart() ? '' : 'opacity-50 pointer-events-none'}`}>{isRunning ? "Stop" : "Start"}</div>
+                <div onClick={handleToggle} className={`brighten-on-click bg-transparent flex items-center justify-center border-2 border-button-start text-off-white px-3 py-4 rounded-full ${canStart() ? '' : 'opacity-50 pointer-events-none'}`}>{isRunning ? "Stop" : "Start"}</div>
             </div>
             <div className={'flex flex-wrap items-start justify-evenly h-full w-full gap-2'}>
                 {inputFields.map((field, index) => (
