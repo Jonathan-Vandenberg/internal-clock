@@ -20,7 +20,8 @@ module.exports = {
       "primary-text": "#b4bcd0",
       "tick-off": "#0c0826",
       "button-start": "#170c59",
-      'tick-on': '#f71414'
+      'tick-on': '#f71414',
+      'mid-gray': '#505050'
     },
     fontSize: {
       xs: "1.3rem",
