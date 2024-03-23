@@ -9,7 +9,7 @@ const MetronomeComponent = () => {
     const [isLightOn, setIsLightOn] = useState(false);
     const [inputFields, setInputFields] = useState([
         { label: 'Time Signature', value: 4 },
-        { label: 'BPM', value: 90 },
+        { label: 'BPM', value: 110 },
         { label: 'Bars Between Ticks', value: 2 },
         { label: 'Count-in Bars', value: 2 },
     ]);
@@ -80,6 +80,12 @@ const MetronomeComponent = () => {
         setInputFields(newInputFields);
     };
 
+    const handleInputClick = (index: number) => {
+        const newInputFields = [...inputFields];
+        newInputFields[index].value = NaN; // Clear the input value
+        setInputFields(newInputFields);
+    };
+
     return (
         <div className="flex flex-col items-center justify-center h-screen">
             <span className={`w-[5rem] h-[0.7rem] rounded-full ${isLightOn ? 'bg-off-white' : 'bg-tick-off'}`} />
@@ -94,10 +100,11 @@ const MetronomeComponent = () => {
                                 <input
                                     id={`input-${index}`}
                                     type="number"
-                                    className={'input-no-outline text-primary-text px-3 py-1 border-2 border-tick-off rounded bg-transparent text-center '}
+                                    className={'input-no-outline text-primary-text px-3 py-1 border-2 border-button-start rounded bg-transparent text-center '}
                                     value={field.value}
                                     onChange={(e) => handleChange(index, e.target.value)}
                                     style={{ caretColor: 'transparent' }}
+                                    onClick={() => handleInputClick(index)}
                                 />
                                 {field.label === 'Time Signature' && (
                                     <span className="text-mid-gray absolute inset-y-0 right-0 flex items-center pr-3">/4</span>
