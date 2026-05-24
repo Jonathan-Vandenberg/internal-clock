@@ -6,19 +6,17 @@ export type BeatPattern = StepState[];
 interface IntervalConfig {
     mode: 'interval';
     barsBetweenTicks: number;
+    // Which beats within bar 1 should play. Length = beatsPerMeasure.
+    getBeatSelect: () => boolean[];
 }
 
 interface SequencerConfig {
     mode: 'sequencer';
-    // Getter so callers can mutate the pattern live without restarting.
-    // Returns one BeatPattern per beat; each may have 4 or 6 steps.
     getPattern: () => BeatPattern[];
 }
 
 export type MetronomeConfig = IntervalConfig | SequencerConfig;
 
-// isBeat = true on every quarter-note downbeat (first step of each beat group,
-// count-in ticks, and interval ticks). Used to fire the left light.
 export type StepCallback = (
     step: number,
     scheduledTime: number,
@@ -33,7 +31,7 @@ export class Metronome {
     private schedulerIntervalId: ReturnType<typeof setInterval> | null = null;
 
     private readonly beatsPerMeasure: number;
-    private readonly tempo: number;
+    private readonly getTempo: () => number;
     private readonly countInBars: number;
     private readonly audioUrl: string;
     private readonly config: MetronomeConfig;
@@ -41,8 +39,11 @@ export class Metronome {
     private readonly getBeatSoundEnabled: () => boolean;
 
     private nextTickTime = 0;
+    // Sequencer position
     private currentBeat = 0;
     private currentStepInBeat = 0;
+    // Interval position: beat index within the full N-bar cycle
+    private currentIntervalBeat = 0;
     private isCountingIn = false;
     private countInBeatsRemaining = 0;
 
@@ -51,7 +52,7 @@ export class Metronome {
 
     constructor(
         beatsPerMeasure: number,
-        tempo: number,
+        getTempo: () => number,
         countInBars: number,
         audioUrl: string,
         config: MetronomeConfig,
@@ -59,7 +60,7 @@ export class Metronome {
         getBeatSoundEnabled: () => boolean
     ) {
         this.beatsPerMeasure = beatsPerMeasure;
-        this.tempo = tempo;
+        this.getTempo = getTempo;
         this.countInBars = countInBars;
         this.audioUrl = audioUrl;
         this.config = config;
@@ -74,6 +75,7 @@ export class Metronome {
         this.nextTickTime = this.audioContext.currentTime + 0.1;
         this.currentBeat = 0;
         this.currentStepInBeat = 0;
+        this.currentIntervalBeat = 0;
         this.isCountingIn = this.countInBars > 0;
         this.countInBeatsRemaining = this.beatsPerMeasure * this.countInBars;
         this.isRunning = true;
@@ -96,37 +98,48 @@ export class Metronome {
         while (this.nextTickTime < this.audioContext.currentTime + Metronome.SCHEDULE_AHEAD_S) {
             if (this.isCountingIn) {
                 this.playNote(this.nextTickTime, 'normal');
-                if (this.getBeatSoundEnabled()) this.playBeatSound(this.nextTickTime);
                 this.stepCallback(-1, this.nextTickTime, 'normal', true);
                 this.countInBeatsRemaining--;
                 if (this.countInBeatsRemaining <= 0) {
                     this.isCountingIn = false;
                     this.currentBeat = 0;
                     this.currentStepInBeat = 0;
+                    this.currentIntervalBeat = 0;
                 }
-                this.nextTickTime += 60.0 / this.tempo;
+                this.nextTickTime += 60.0 / this.getTempo();
 
             } else if (this.config.mode === 'interval') {
-                this.playNote(this.nextTickTime, 'normal');
-                if (this.getBeatSoundEnabled()) this.playBeatSound(this.nextTickTime);
-                this.stepCallback(-1, this.nextTickTime, 'normal', true);
-                this.nextTickTime += (60.0 / this.tempo) * this.beatsPerMeasure * this.config.barsBetweenTicks;
+                const totalBeats = this.beatsPerMeasure * this.config.barsBetweenTicks;
+                const barInCycle = Math.floor(this.currentIntervalBeat / this.beatsPerMeasure);
+                const beatInBar = this.currentIntervalBeat % this.beatsPerMeasure;
+
+                // Only bar 0 can have active beats
+                const beatSelect = this.config.getBeatSelect();
+                const played = barInCycle === 0 && (beatSelect[beatInBar] ?? false);
+
+                if (played) {
+                    this.playNote(this.nextTickTime, 'normal');
+                    if (this.getBeatSoundEnabled()) this.playBeatSound(this.nextTickTime);
+                }
+
+                // Pass beatInBar as step during bar 0 so the UI can show the playhead
+                const step = barInCycle === 0 ? beatInBar : -1;
+                this.stepCallback(step, this.nextTickTime, played ? 'normal' : 'off', played);
+
+                this.currentIntervalBeat = (this.currentIntervalBeat + 1) % totalBeats;
+                this.nextTickTime += 60.0 / this.getTempo();
 
             } else {
                 const pattern = this.config.getPattern();
                 if (pattern.length === 0) break;
 
-                // Wrap beat index in case pattern shrank
                 this.currentBeat = this.currentBeat % pattern.length;
                 const beat = pattern[this.currentBeat];
-                const division = beat.length; // 4 or 6
-
-                // Wrap step index in case division shrank
+                const division = beat.length;
                 this.currentStepInBeat = this.currentStepInBeat % division;
                 const state = beat[this.currentStepInBeat];
                 const isBeat = this.currentStepInBeat === 0;
 
-                // Compute flat global step index for the UI playhead
                 let globalStep = this.currentStepInBeat;
                 for (let b = 0; b < this.currentBeat; b++) globalStep += pattern[b].length;
 
@@ -134,14 +147,12 @@ export class Metronome {
                 if (isBeat && this.getBeatSoundEnabled()) this.playBeatSound(this.nextTickTime);
                 this.stepCallback(globalStep, this.nextTickTime, state, isBeat);
 
-                // Advance
                 this.currentStepInBeat++;
                 if (this.currentStepInBeat >= division) {
                     this.currentStepInBeat = 0;
                     this.currentBeat = (this.currentBeat + 1) % pattern.length;
                 }
-                // Step duration depends on this beat's division
-                this.nextTickTime += (60.0 / this.tempo) / division;
+                this.nextTickTime += (60.0 / this.getTempo()) / division;
             }
         }
     }
@@ -163,7 +174,7 @@ export class Metronome {
         gain.gain.value = 1.6;
         const source = this.audioContext.createBufferSource();
         source.buffer = this.audioBuffer;
-        source.playbackRate.value = 1.4; // higher pitch + shorter = distinct from normal click
+        source.playbackRate.value = 1.4;
         source.connect(gain);
         gain.connect(this.audioContext.destination);
         source.start(time);
