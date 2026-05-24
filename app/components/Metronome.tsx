@@ -199,6 +199,7 @@ const MetronomeComponent = () => {
         isBeat: boolean;
     }>>([]);
 
+    useEffect(() => { if (mode === 'interval') setBeatSoundEnabled(false); }, [mode]);
     useEffect(() => { patternRef.current = beatPattern; }, [beatPattern]);
     useEffect(() => { beatSelectRef.current = beatSelect; }, [beatSelect]);
     useEffect(() => { beatSoundEnabledRef.current = beatSoundEnabled; }, [beatSoundEnabled]);
@@ -345,12 +346,6 @@ const MetronomeComponent = () => {
             {/* ── BPM dial ── */}
             <BpmDial bpm={bpm} onChange={setBpm} />
 
-            {/* ── Time Sig + Count-in ── */}
-            <div style={{ display: 'flex', gap: '2rem', justifyContent: 'center', opacity: isRunning ? 0.35 : 1, pointerEvents: isRunning ? 'none' : 'auto', transition: 'opacity 150ms' }}>
-                <StepControl label="Time Sig" value={timeSig} min={1} max={8} onChange={setTimeSig} />
-                <StepControl label="Count-in" value={countInBars} min={0} max={8} onChange={setCountInBars} />
-            </div>
-
             {/* ── Mode tabs + Start/Stop ── */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
                 <div style={{
@@ -401,8 +396,14 @@ const MetronomeComponent = () => {
                 </button>
             </div>
 
+            {/* ── Time Sig + Count-in ── */}
+            <div style={{ display: 'flex', gap: '2rem', justifyContent: 'center', opacity: isRunning ? 0.35 : 1, pointerEvents: isRunning ? 'none' : 'auto', transition: 'opacity 150ms' }}>
+                <StepControl label="Time Sig" value={timeSig} min={1} max={8} onChange={setTimeSig} />
+                <StepControl label="Count-in" value={countInBars} min={0} max={8} onChange={setCountInBars} />
+            </div>
+
             {/* ── Mode panel ── */}
-            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: isRunning && mode === 'interval' ? 0.35 : 1, pointerEvents: isRunning && mode === 'interval' ? 'none' : 'auto', transition: 'opacity 150ms' }}>
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             {mode === 'interval' ? (
 
                 <div style={{
@@ -413,7 +414,9 @@ const MetronomeComponent = () => {
                     maxWidth: '26rem',
                 }}>
                     {/* Bars Between Ticks */}
-                    <StepControl label="Bars Between Ticks" value={barsBetweenTicks} min={1} onChange={setBarsBetweenTicks} />
+                    <div style={{ opacity: isRunning ? 0.35 : 1, pointerEvents: isRunning ? 'none' : 'auto', transition: 'opacity 150ms' }}>
+                        <StepControl label="Bars Between Ticks" value={barsBetweenTicks} min={1} onChange={setBarsBetweenTicks} />
+                    </div>
 
                     {/* Divider */}
                     <div style={{ height: '1px', background: BORDER, opacity: 0.5 }} />
@@ -422,7 +425,9 @@ const MetronomeComponent = () => {
                     <div style={{ width: '100%' }}>
                         <span style={{ ...fieldLabel, marginBottom: '0.6rem' }}>Beats</span>
                         <div style={{ display: 'flex', gap: '0.4rem' }}>
-                            {beatSelect.map((active, i) => (
+                            {beatSelect.map((active, i) => {
+                                const isFlashing = active && beatLightOn && currentStep === i;
+                                return (
                                 <button
                                     key={i}
                                     onClick={() => setBeatSelect(prev => prev.map((v, j) => j === i ? !v : v))}
@@ -430,22 +435,22 @@ const MetronomeComponent = () => {
                                         flex: 1,
                                         height: '3.2rem',
                                         borderRadius: '0.4rem',
-                                        background: active
-                                            ? '#5060c0'
-                                            : '#0c0826',
+                                        background: active ? '#5060c0' : '#0c0826',
                                         border: `1px solid ${active ? '#4a3aaa' : BORDER}`,
                                         cursor: 'pointer',
-                                        transition: 'background 120ms, border-color 120ms',
+                                        transition: 'filter 60ms, background 120ms, border-color 120ms',
                                         touchAction: 'manipulation',
                                         color: active ? TEXT : MUTED,
                                         fontSize: '1rem',
                                         fontWeight: 600,
                                         fontFamily: 'inherit',
+                                        filter: isFlashing ? 'brightness(2)' : 'none',
                                     }}
                                 >
                                     {i + 1}
                                 </button>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
