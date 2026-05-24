@@ -160,9 +160,10 @@ export class Metronome {
     private playBeatSound(time: number): void {
         if (!this.audioBuffer || !this.audioContext) return;
         const gain = this.audioContext.createGain();
-        gain.gain.value = 0.35;
+        gain.gain.value = 1.6;
         const source = this.audioContext.createBufferSource();
         source.buffer = this.audioBuffer;
+        source.playbackRate.value = 1.4; // higher pitch + shorter = distinct from normal click
         source.connect(gain);
         gain.connect(this.audioContext.destination);
         source.start(time);
