@@ -320,6 +320,7 @@ const MetronomeComponent = () => {
                         <span style={fieldLabel}>{label}</span>
                         <input
                             type="number"
+                            inputMode="numeric"
                             style={inputStyle}
                             value={value}
                             min={min}
@@ -398,6 +399,7 @@ const MetronomeComponent = () => {
                         <span style={fieldLabel}>Bars Between Ticks</span>
                         <input
                             type="number"
+                            inputMode="numeric"
                             style={inputStyle}
                             value={barsBetweenTicks}
                             min={1}
