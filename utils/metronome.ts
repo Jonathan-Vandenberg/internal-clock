@@ -160,9 +160,10 @@ export class Metronome {
     private playNote(time: number, state: StepState): void {
         if (!this.audioBuffer || !this.audioContext) return;
         const gain = this.audioContext.createGain();
-        gain.gain.value = state === 'accent' ? 1.8 : 1.0;
+        gain.gain.value = state === 'accent' ? 1.6 : 1.0;
         const source = this.audioContext.createBufferSource();
         source.buffer = this.audioBuffer;
+        source.playbackRate.value = state === 'accent' ? 1.5 : 1.0;
         source.connect(gain);
         gain.connect(this.audioContext.destination);
         source.start(time);
@@ -174,7 +175,7 @@ export class Metronome {
         gain.gain.value = 1.6;
         const source = this.audioContext.createBufferSource();
         source.buffer = this.audioBuffer;
-        source.playbackRate.value = 1.4;
+        source.playbackRate.value = 0.7;
         source.connect(gain);
         gain.connect(this.audioContext.destination);
         source.start(time);

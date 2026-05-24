@@ -20,8 +20,8 @@ function defaultBeatPattern(timeSig: number): BeatPattern[] {
 }
 
 function stepBackground(state: StepState): string {
-    if (state === 'normal') return 'linear-gradient(92.88deg, rgb(69,94,181) 9.16%, rgb(86,67,204) 43.89%, rgb(103,63,215) 64.72%)';
-    if (state === 'accent') return 'linear-gradient(92.88deg, rgb(115,85,225) 9.16%, rgb(165,75,255) 64.72%)';
+    if (state === 'normal') return '#5060c0';
+    if (state === 'accent') return '#8844dd';
     return '#0c0826';
 }
 
@@ -33,13 +33,61 @@ function toGlobalStep(beat: number, stepInBeat: number, pattern: BeatPattern[]):
 
 const LIGHT_OFF = '#1a1630';
 const LIGHT_NORMAL = '#f7f8f8';
-const LIGHT_ACCENT = '#b060ff';
+
 const BORDER = '#170c59';
 const MUTED = '#505050';
 const TEXT = '#f7f8f8';
 
+const StepControl: React.FC<{
+    label: string;
+    value: number;
+    min: number;
+    max?: number;
+    onChange: (v: number) => void;
+}> = ({ label, value, min, max, onChange }) => {
+    const atMin = value <= min;
+    const atMax = max !== undefined && value >= max;
+    const chevronBtn = (disabled: boolean, onClick: () => void, char: string) => (
+        <button
+            onClick={onClick}
+            disabled={disabled}
+            style={{
+                width: '2.4rem',
+                height: '2.4rem',
+                borderRadius: '9999px',
+                border: `1px solid ${disabled ? '#1e1a32' : BORDER}`,
+                background: 'transparent',
+                color: disabled ? '#2a2640' : MUTED,
+                fontSize: '1.4rem',
+                cursor: disabled ? 'default' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                touchAction: 'manipulation',
+                fontFamily: 'inherit',
+                lineHeight: 1,
+                flexShrink: 0,
+            }}
+        >
+            {char}
+        </button>
+    );
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem' }}>
+            <span style={{ color: MUTED, fontSize: '0.75rem', letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>{label}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {chevronBtn(atMin, () => onChange(Math.max(min, value - 1)), '‹')}
+                <span style={{ color: TEXT, fontSize: '1.5rem', fontWeight: 600, minWidth: '1.6rem', textAlign: 'center' }}>
+                    {value}
+                </span>
+                {chevronBtn(atMax, () => onChange(max !== undefined ? Math.min(max, value + 1) : value + 1), '›')}
+            </div>
+        </div>
+    );
+};
+
 const BpmDial: React.FC<{ bpm: number; onChange: (v: number) => void }> = ({ bpm, onChange }) => {
-    const MIN = 20, MAX = 300;
+    const MIN = 50, MAX = 230;
     const SIZE = 148;
     const CX = SIZE / 2, CY = SIZE / 2;
     const R = 56;
@@ -132,7 +180,7 @@ const MetronomeComponent = () => {
     const [mode, setMode] = useState<Mode>('interval');
     const [timeSig, setTimeSig] = useState(4);
     const [bpm, setBpm] = useState(110);
-    const [countInBars, setCountInBars] = useState(2);
+    const [countInBars, setCountInBars] = useState(1);
     const [barsBetweenTicks, setBarsBetweenTicks] = useState(2);
     const [beatPattern, setBeatPattern] = useState<BeatPattern[]>(() => defaultBeatPattern(4));
     const [beatSelect, setBeatSelect] = useState<boolean[]>(() => [true, ...Array(3).fill(false)]);
@@ -178,8 +226,8 @@ const MetronomeComponent = () => {
                         setBeatLightOn(true);
                         setTimeout(() => setBeatLightOn(false), 150);
                     }
-                    if (playedState !== 'off') {
-                        setNoteLightColor(playedState === 'accent' ? LIGHT_ACCENT : LIGHT_NORMAL);
+                    if (playedState !== 'off' && step >= 0) {
+                        setNoteLightColor(playedState === 'accent' ? '#8844dd' : '#5060c0');
                         setTimeout(() => setNoteLightColor(null), 100);
                     }
                 } else {
@@ -244,19 +292,6 @@ const MetronomeComponent = () => {
         });
     };
 
-    const inputStyle: React.CSSProperties = {
-        width: '4.5rem',
-        padding: '0.4rem 0.5rem',
-        fontSize: '1.3rem',
-        textAlign: 'center',
-        background: 'transparent',
-        border: `1px solid ${BORDER}`,
-        borderRadius: '0.5rem',
-        color: TEXT,
-        outline: 'none',
-        fontFamily: 'inherit',
-    };
-
     const fieldLabel: React.CSSProperties = {
         color: MUTED,
         fontSize: '0.75rem',
@@ -311,27 +346,9 @@ const MetronomeComponent = () => {
             <BpmDial bpm={bpm} onChange={setBpm} />
 
             {/* ── Time Sig + Count-in ── */}
-            <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-end', justifyContent: 'center' }}>
-                {[
-                    { label: 'Time Sig', value: timeSig, min: 1, max: 8, set: (v: number) => setTimeSig(v) },
-                    { label: 'Count-in', value: countInBars, min: 0, max: 8, set: (v: number) => setCountInBars(v) },
-                ].map(({ label, value, min, max, set }) => (
-                    <div key={label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <span style={fieldLabel}>{label}</span>
-                        <input
-                            type="number"
-                            inputMode="numeric"
-                            style={inputStyle}
-                            value={value}
-                            min={min}
-                            max={max}
-                            onChange={e => {
-                                const v = parseInt(e.target.value, 10);
-                                if (!isNaN(v)) set(Math.max(min, Math.min(max, v)));
-                            }}
-                        />
-                    </div>
-                ))}
+            <div style={{ display: 'flex', gap: '2rem', justifyContent: 'center', opacity: isRunning ? 0.35 : 1, pointerEvents: isRunning ? 'none' : 'auto', transition: 'opacity 150ms' }}>
+                <StepControl label="Time Sig" value={timeSig} min={1} max={8} onChange={setTimeSig} />
+                <StepControl label="Count-in" value={countInBars} min={0} max={8} onChange={setCountInBars} />
             </div>
 
             {/* ── Mode tabs + Start/Stop ── */}
@@ -385,6 +402,7 @@ const MetronomeComponent = () => {
             </div>
 
             {/* ── Mode panel ── */}
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: isRunning && mode === 'interval' ? 0.35 : 1, pointerEvents: isRunning && mode === 'interval' ? 'none' : 'auto', transition: 'opacity 150ms' }}>
             {mode === 'interval' ? (
 
                 <div style={{
@@ -395,20 +413,7 @@ const MetronomeComponent = () => {
                     maxWidth: '26rem',
                 }}>
                     {/* Bars Between Ticks */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <span style={fieldLabel}>Bars Between Ticks</span>
-                        <input
-                            type="number"
-                            inputMode="numeric"
-                            style={inputStyle}
-                            value={barsBetweenTicks}
-                            min={1}
-                            onChange={e => {
-                                const v = parseInt(e.target.value, 10);
-                                if (!isNaN(v) && v >= 1) setBarsBetweenTicks(v);
-                            }}
-                        />
-                    </div>
+                    <StepControl label="Bars Between Ticks" value={barsBetweenTicks} min={1} onChange={setBarsBetweenTicks} />
 
                     {/* Divider */}
                     <div style={{ height: '1px', background: BORDER, opacity: 0.5 }} />
@@ -426,7 +431,7 @@ const MetronomeComponent = () => {
                                         height: '3.2rem',
                                         borderRadius: '0.4rem',
                                         background: active
-                                            ? 'linear-gradient(92.88deg, rgb(69,94,181) 9.16%, rgb(86,67,204) 43.89%, rgb(103,63,215) 64.72%)'
+                                            ? '#5060c0'
                                             : '#0c0826',
                                         border: `1px solid ${active ? '#4a3aaa' : BORDER}`,
                                         cursor: 'pointer',
@@ -466,27 +471,36 @@ const MetronomeComponent = () => {
                             style={{
                                 padding: '0.2rem 0.9rem',
                                 fontSize: '0.85rem',
-                                border: `1px solid ${beatSoundEnabled ? '#4a3aaa' : BORDER}`,
+                                border: `1px solid ${beatSoundEnabled ? '#7a60dd' : '#3a3060'}`,
                                 borderRadius: '9999px',
-                                background: beatSoundEnabled ? '#170c59' : 'transparent',
-                                color: beatSoundEnabled ? TEXT : MUTED,
+                                background: beatSoundEnabled ? '#2a1880' : 'transparent',
+                                color: beatSoundEnabled ? TEXT : '#8880b0',
                                 cursor: 'pointer',
                                 transition: 'background 150ms, color 150ms, border-color 150ms',
                                 touchAction: 'manipulation',
                                 fontFamily: 'inherit',
                             }}
                         >
-                            1st Beat Sound
+                            Beat Sound
                         </button>
                         <button
-                            onClick={() => setBeatPattern(defaultBeatPattern(timeSig))}
+                            onClick={() => {
+                                if (isRunning) {
+                                    metronomeRef.current?.stop();
+                                    metronomeRef.current = null;
+                                    pendingEvents.current = [];
+                                    setIsRunning(false);
+                                    setCurrentStep(-1);
+                                }
+                                setBeatPattern(defaultBeatPattern(timeSig));
+                            }}
                             style={{
                                 padding: '0.2rem 0.9rem',
                                 fontSize: '0.85rem',
-                                border: `1px solid ${BORDER}`,
+                                border: '1px solid #3a3060',
                                 borderRadius: '9999px',
                                 background: 'transparent',
-                                color: MUTED,
+                                color: '#8880b0',
                                 cursor: 'pointer',
                                 touchAction: 'manipulation',
                                 fontFamily: 'inherit',
@@ -527,8 +541,7 @@ const MetronomeComponent = () => {
                                                     height: '2.9rem',
                                                     borderRadius: '0.3rem',
                                                     background: stepBackground(state),
-                                                    outline: isCurrent ? '2px solid #f7f8f8' : '2px solid transparent',
-                                                    outlineOffset: '2px',
+                                                    filter: isCurrent ? 'brightness(2)' : 'none',
                                                     cursor: 'pointer',
                                                     transition: 'outline 55ms, background 55ms',
                                                     border: 'none',
@@ -583,6 +596,7 @@ const MetronomeComponent = () => {
 
                 </div>
             )}
+            </div>
 
             <HeroImage />
         </div>
