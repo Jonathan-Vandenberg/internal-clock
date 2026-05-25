@@ -3,16 +3,28 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --foreground-rgb: 247, 248, 248;
+  --background-start-rgb: 5, 2, 20;
+  --background-end-rgb: 9, 4, 30;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+html.dark {
+  --foreground-rgb: 247, 248, 248;
+  --background-start-rgb: 5, 2, 20;
+  --background-end-rgb: 9, 4, 30;
+}
+
+html.light {
+  --foreground-rgb: 20, 6, 58;
+  --background-start-rgb: 240, 234, 255;
+  --background-end-rgb: 248, 245, 255;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not(.dark) {
+    --foreground-rgb: 20, 6, 58;
+    --background-start-rgb: 240, 234, 255;
+    --background-end-rgb: 248, 245, 255;
   }
 }
 
@@ -40,13 +52,13 @@ body::-webkit-scrollbar {
 
 @keyframes brighten-border {
   0% {
-    border-color: #2813a8; /* Initial border color */
+    border-color: #2813a8;
   }
   50% {
-    border-color: #170c59; /* Brighter border color */
+    border-color: #170c59;
   }
   100% {
-    border-color: #2813a8; /* Return to initial border color */
+    border-color: #2813a8;
   }
 }
 
