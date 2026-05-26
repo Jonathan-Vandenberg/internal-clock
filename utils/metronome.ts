@@ -37,6 +37,7 @@ export class Metronome {
     private readonly config: MetronomeConfig;
     private readonly stepCallback: StepCallback;
     private readonly getBeatSoundEnabled: () => boolean;
+    private readonly getSequencerSoundEnabled: () => boolean;
 
     private nextTickTime = 0;
     // Sequencer position
@@ -57,7 +58,8 @@ export class Metronome {
         audioUrl: string,
         config: MetronomeConfig,
         stepCallback: StepCallback,
-        getBeatSoundEnabled: () => boolean
+        getBeatSoundEnabled: () => boolean,
+        getSequencerSoundEnabled: () => boolean
     ) {
         this.beatsPerMeasure = beatsPerMeasure;
         this.getTempo = getTempo;
@@ -66,6 +68,7 @@ export class Metronome {
         this.config = config;
         this.stepCallback = stepCallback;
         this.getBeatSoundEnabled = getBeatSoundEnabled;
+        this.getSequencerSoundEnabled = getSequencerSoundEnabled;
     }
 
     start(): void {
@@ -143,7 +146,7 @@ export class Metronome {
                 let globalStep = this.currentStepInBeat;
                 for (let b = 0; b < this.currentBeat; b++) globalStep += pattern[b].length;
 
-                if (state !== 'off') this.playNote(this.nextTickTime, state);
+                if (state !== 'off' && this.getSequencerSoundEnabled()) this.playNote(this.nextTickTime, state);
                 if (isBeat && this.getBeatSoundEnabled()) this.playBeatSound(this.nextTickTime);
                 this.stepCallback(globalStep, this.nextTickTime, state, isBeat);
 

@@ -265,12 +265,14 @@ const MetronomeComponent = () => {
     const [beatSelect, setBeatSelect] = useState<boolean[]>(() => [true, ...Array(3).fill(false)]);
     const [currentStep, setCurrentStep] = useState(-1);
     const [beatSoundEnabled, setBeatSoundEnabled] = useState(false);
+    const [sequencerSoundEnabled, setSequencerSoundEnabled] = useState(true);
 
     const metronomeRef = useRef<Metronome | null>(null);
     const patternRef = useRef(beatPattern);
     const beatSelectRef = useRef<boolean[]>([true, false, false, false]);
     const bpmRef = useRef(bpm);
     const beatSoundEnabledRef = useRef(false);
+    const sequencerSoundEnabledRef = useRef(true);
     const pendingEvents = useRef<Array<{
         step: number;
         scheduledTime: number;
@@ -304,6 +306,7 @@ const MetronomeComponent = () => {
     useEffect(() => { patternRef.current = beatPattern; }, [beatPattern]);
     useEffect(() => { beatSelectRef.current = beatSelect; }, [beatSelect]);
     useEffect(() => { beatSoundEnabledRef.current = beatSoundEnabled; }, [beatSoundEnabled]);
+    useEffect(() => { sequencerSoundEnabledRef.current = sequencerSoundEnabled; }, [sequencerSoundEnabled]);
     useEffect(() => { bpmRef.current = bpm; }, [bpm]);
 
     useEffect(() => {
@@ -367,7 +370,8 @@ const MetronomeComponent = () => {
         const m = new Metronome(
             timeSig, () => bpmRef.current, countInBars, woodblockSound,
             config, stepCallback,
-            () => beatSoundEnabledRef.current
+            () => beatSoundEnabledRef.current,
+            () => sequencerSoundEnabledRef.current
         );
         metronomeRef.current = m;
         m.start();
@@ -414,10 +418,24 @@ const MetronomeComponent = () => {
             gap: '1.8rem',
             width: '100%',
             maxWidth: '36rem',
+            paddingTop: '2.8rem',
         }}>
 
-            {/* ── Lights + theme toggle ── */}
-            <div style={{ display: 'flex', width: '100%', alignItems: 'center' }}>
+            {/* ── Lights + theme toggle — fixed to top of screen ── */}
+            <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                zIndex: 50,
+                display: 'flex',
+                alignItems: 'center',
+                padding: '0.75rem 1.5rem',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                background: darkMode ? 'rgba(0, 2, 18, 0.85)' : 'rgba(240, 234, 255, 0.85)',
+                borderBottom: `1px solid ${theme.border}`,
+            }}>
                 <div style={{ flex: 1 }} />
                 <div style={{ display: 'flex', gap: mode === 'sequencer' ? '3.5rem' : '0.5rem', justifyContent: 'center', flex: 1 }}>
                     {mode === 'interval' ? (
@@ -615,23 +633,42 @@ const MetronomeComponent = () => {
                         alignItems: 'center',
                         marginBottom: '0.5rem',
                     }}>
-                        <button
-                            onClick={() => setBeatSoundEnabled(v => !v)}
-                            style={{
-                                padding: '0.2rem 0.9rem',
-                                fontSize: '0.85rem',
-                                border: `1px solid ${beatSoundEnabled ? theme.toolbarBtnActiveBorder : theme.toolbarBtnInactiveBorder}`,
-                                borderRadius: '9999px',
-                                background: beatSoundEnabled ? theme.toolbarBtnActiveBg : 'transparent',
-                                color: beatSoundEnabled ? theme.text : theme.toolbarBtnInactiveColor,
-                                cursor: 'pointer',
-                                transition: 'background 150ms, color 150ms, border-color 150ms',
-                                touchAction: 'manipulation',
-                                fontFamily: 'inherit',
-                            }}
-                        >
-                            Beat Sound
-                        </button>
+                        <div style={{ display: 'flex', gap: '0.4rem' }}>
+                            <button
+                                onClick={() => setSequencerSoundEnabled(v => !v)}
+                                style={{
+                                    padding: '0.2rem 0.9rem',
+                                    fontSize: '0.85rem',
+                                    border: `1px solid ${sequencerSoundEnabled ? theme.toolbarBtnActiveBorder : theme.toolbarBtnInactiveBorder}`,
+                                    borderRadius: '9999px',
+                                    background: sequencerSoundEnabled ? theme.toolbarBtnActiveBg : 'transparent',
+                                    color: sequencerSoundEnabled ? theme.text : theme.toolbarBtnInactiveColor,
+                                    cursor: 'pointer',
+                                    transition: 'background 150ms, color 150ms, border-color 150ms',
+                                    touchAction: 'manipulation',
+                                    fontFamily: 'inherit',
+                                }}
+                            >
+                                Seq Sound
+                            </button>
+                            <button
+                                onClick={() => setBeatSoundEnabled(v => !v)}
+                                style={{
+                                    padding: '0.2rem 0.9rem',
+                                    fontSize: '0.85rem',
+                                    border: `1px solid ${beatSoundEnabled ? theme.toolbarBtnActiveBorder : theme.toolbarBtnInactiveBorder}`,
+                                    borderRadius: '9999px',
+                                    background: beatSoundEnabled ? theme.toolbarBtnActiveBg : 'transparent',
+                                    color: beatSoundEnabled ? theme.text : theme.toolbarBtnInactiveColor,
+                                    cursor: 'pointer',
+                                    transition: 'background 150ms, color 150ms, border-color 150ms',
+                                    touchAction: 'manipulation',
+                                    fontFamily: 'inherit',
+                                }}
+                            >
+                                Metronome
+                            </button>
+                        </div>
                         <button
                             onClick={() => {
                                 if (isRunning) {
